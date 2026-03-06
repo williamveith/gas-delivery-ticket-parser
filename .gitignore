@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+*.pyo
+*.DS_Store
+venv/
+test files/
+.vscode/
+*.pdf
