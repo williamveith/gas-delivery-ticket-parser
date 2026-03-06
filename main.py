@@ -10,14 +10,15 @@ from datetime import datetime
 from pypdf import PdfReader
 import pyperclip
 from dataclasses import dataclass, field
-from typing import List
 from lookups import account_to_group, part_number_to_gas
+
 
 @dataclass
 class Cylinder:
     serial_number: str
     part_number: str
     gas: str
+
 
 @dataclass
 class DeliveryTicket:
@@ -26,7 +27,7 @@ class DeliveryTicket:
     order_number: str = ""
     customer_po: str = ""
     delivery_date: str = ""
-    shipped_cylinders: List[Cylinder] = field(default_factory=list)
+    shipped_cylinders: list[Cylinder] = field(default_factory=list)
 
 
 def extract_delivery_ticket_data(pdf_path: str | pathlib.Path) -> DeliveryTicket:
@@ -96,7 +97,7 @@ def extract_delivery_ticket_data(pdf_path: str | pathlib.Path) -> DeliveryTicket
         flags=re.IGNORECASE,
     )
 
-    current_part_number = None
+    current_part_number: str | None = None
 
     for line in lines:
         item_match = item_line_re.match(line)
@@ -121,56 +122,75 @@ def extract_delivery_ticket_data(pdf_path: str | pathlib.Path) -> DeliveryTicket
 
     return data
 
-def main():
-    BASE_DIR = pathlib.Path(__file__).resolve().parent
 
-    parser = argparse.ArgumentParser(
-        description="Parse Linde delivery ticket PDFs"
-    )
+def get_deliveries(paths: list[pathlib.Path]) -> tuple[list[str], list[list[str]]]:
+    rows: list[list[str]] = []
+    filenames: list[str] = [
+        "Copied data from the following file(s). Paste in Excel (Ctrl+V)."
+    ]
 
-    parser.add_argument(
-        "directory",
-        nargs="?",
-        default=BASE_DIR / "Delivery Documents",
-        help="Directory containing PDF delivery tickets",
-    )
-
-    args = parser.parse_args()
-    path = pathlib.Path(args.directory)
-
-    if not path.is_dir():
-        raise RuntimeError(f"Directory does not exist or is not a folder: {path}")
-
-    filenames = ["Copied data from the following files. Paste in Excel (Ctrl+V)."]
-    rows = []
-
-    for pdf_file_path in sorted(path.glob("*.pdf")):
+    for pdf_file_path in paths:
         data = extract_delivery_ticket_data(pdf_file_path)
         filenames.append(pdf_file_path.stem)
 
         for cylinder in data.shipped_cylinders:
-            rows.append([
-                cylinder.serial_number,
-                cylinder.gas,
-                cylinder.part_number,
-                data.customer_number,
-                data.group,
-                data.customer_po,
-                data.order_number,
-                data.delivery_date,
-            ])
+            rows.append(
+                [
+                    cylinder.serial_number,
+                    cylinder.gas,
+                    cylinder.part_number,
+                    data.customer_number,
+                    data.group,
+                    data.customer_po,
+                    data.order_number,
+                    data.delivery_date,
+                ]
+            )
 
     if not rows:
+        return filenames, []
+
+    return filenames, rows
+
+
+def main():
+    BASE_DIR = pathlib.Path(__file__).resolve().parent
+
+    parser = argparse.ArgumentParser(description="Parse Linde delivery ticket PDFs")
+
+    parser.add_argument(
+        "input_path",
+        nargs="?",
+        default=BASE_DIR / "Delivery Documents",
+        help="Path to a PDF delivery ticket or a directory containing PDF delivery tickets",
+    )
+
+    args = parser.parse_args()
+    input_path = pathlib.Path(args.input_path)
+    paths: list[pathlib.Path] = []
+
+    if input_path.is_file() and input_path.suffix.lower() == ".pdf":
+        paths.append(input_path)
+
+    elif input_path.is_dir():
+        paths = sorted(input_path.glob(pattern="*.pdf", case_sensitive=False))
+
+    else:
+        raise RuntimeError(f"Path is not a PDF file or directory: {input_path}")
+
+    filenames, rows = get_deliveries(paths)
+
+    if rows:
+        text_to_copy = "\n".join("\t".join(row) for row in rows)
+        print_confirmation = "\n\t".join(filenames)
+
+        pyperclip.copy(text_to_copy)
+
+        print("Copied spreadsheet rows to clipboard.\n")
+        print(print_confirmation)
+    else:
         print("No cylinders found in PDFs.")
-        return
 
-    text_to_copy = "\n".join("\t".join(row) for row in rows)
-    print_confirmation = "\n\t".join(filenames)
-
-    pyperclip.copy(text_to_copy)
-
-    print("Copied spreadsheet rows to clipboard.\n")
-    print(print_confirmation)
 
 if __name__ == "__main__":
     main()

@@ -2,13 +2,16 @@
 
 Extracts cylinder delivery information from **Linde Gas delivery ticket PDFs** and formats it for direct pasting into **Excel or Google Sheets**.
 
-The script reads all PDF files in a directory, parses delivery ticket data, and copies a tab-separated table to the clipboard.
+The script reads **one PDF or all PDFs in a directory**, parses delivery ticket data, and copies a tab-separated table to the clipboard.
 
 ---
 
 # Features
 
 * Parses **multi-page delivery tickets**
+
+* Accepts **a single PDF or a directory of PDFs**
+
 * Extracts:
 
   * Serial Number
@@ -19,13 +22,21 @@ The script reads all PDF files in a directory, parses delivery ticket data, and 
   * PO Number
   * Order Number
   * Delivery Date
+
 * Automatically maps:
 
   * **Account → Research Group**
   * **Part Number → Gas**
+
 * Copies results directly to the clipboard for **Ctrl+V into Excel / Google Sheets**
+
 * Handles inconsistent PDF spacing using **layout-based PDF extraction**
-* Supports **custom input directories via CLI**
+
+* Supports **custom input paths via CLI**
+
+* Processes PDFs in **sorted order**
+
+* Detects `.pdf` files **case-insensitively**
 
 ---
 
@@ -50,7 +61,7 @@ After running the script, simply **paste into Excel or Google Sheets**.
 
 # Requirements
 
-Python version required:
+Required Python version:
 
 ```
 Python 3.14.x
@@ -68,7 +79,7 @@ pyperclip
 Install using:
 
 ```bash
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
 ---
@@ -77,14 +88,14 @@ pip install -r requirements.txt
 
 Create a virtual environment before running the script.
 
-```bash
+```
 python3.14 -m venv venv
 source venv/bin/activate
 python3 -m pip install --upgrade pip
 python3 -m pip install -r requirements.txt
 ```
 
-Dependencies listed in:
+Dependencies are listed in:
 
 ```
 requirements.txt
@@ -94,7 +105,7 @@ requirements.txt
 
 # Usage
 
-### Default directory
+## Default directory
 
 Place delivery ticket PDFs inside:
 
@@ -104,23 +115,29 @@ Delivery Documents/
 
 Run:
 
-```bash
+```
 python3 main.py
 ```
 
 ---
 
-### Custom directory
+## Process a single PDF
 
-You can provide a directory containing PDFs:
+```
+python3 main.py "Delivery Documents/Order 11718828 - PO 2023U32948.pdf"
+```
 
-```bash
+---
+
+## Process a custom directory
+
+```
 python3 main.py "test files"
 ```
 
 or
 
-```bash
+```
 python3 main.py ~/Downloads/tickets
 ```
 
@@ -129,7 +146,7 @@ python3 main.py ~/Downloads/tickets
 # Project Structure
 
 ```
-gas-delivery-parser/
+gas-receiving/
 │
 ├── main.py
 ├── lookups.py
@@ -145,12 +162,12 @@ gas-delivery-parser/
 
 # Lookup Tables
 
-The file `lookups.py` contains dictionaries used during parsing:
+`lookups.py` contains dictionaries used during parsing:
 
 * `account_to_group`
 * `part_number_to_gas`
 
-These convert internal identifiers into readable values. 
+These convert internal identifiers into readable values.
 
 ---
 
@@ -187,7 +204,7 @@ The script performs the following steps:
 
 1. Extracts text from each PDF page using **layout-based extraction**
 2. Normalizes whitespace
-3. Uses regex patterns to extract key fields:
+3. Uses regex patterns to locate key fields:
 
 | Field           | Pattern                           |
 | --------------- | --------------------------------- |
