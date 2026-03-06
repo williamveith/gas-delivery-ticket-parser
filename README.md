@@ -78,9 +78,10 @@ pip install -r requirements.txt
 Create a virtual environment before running the script.
 
 ```bash
-python3.14 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+python3.14 -m venv venv
+source venv/bin/activate
+python3 -m pip install --upgrade pip
+python3 -m pip install -r requirements.txt
 ```
 
 Dependencies listed in:
@@ -104,7 +105,7 @@ Delivery Documents/
 Run:
 
 ```bash
-python main.py
+python3 main.py
 ```
 
 ---
@@ -114,13 +115,13 @@ python main.py
 You can provide a directory containing PDFs:
 
 ```bash
-python main.py "test files"
+python3 main.py "test files"
 ```
 
 or
 
 ```bash
-python main.py ~/Downloads/tickets
+python3 main.py ~/Downloads/tickets
 ```
 
 ---
