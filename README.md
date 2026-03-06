@@ -6,7 +6,7 @@ The script reads all PDF files in a directory, parses delivery ticket data, and 
 
 ---
 
-## Features
+# Features
 
 * Parses **multi-page delivery tickets**
 * Extracts:
@@ -23,12 +23,13 @@ The script reads all PDF files in a directory, parses delivery ticket data, and 
 
   * **Account → Research Group**
   * **Part Number → Gas**
-* Copies results directly to clipboard for **Ctrl+V into Excel / Google Sheets**
-* Handles inconsistent PDF spacing using layout extraction
+* Copies results directly to the clipboard for **Ctrl+V into Excel / Google Sheets**
+* Handles inconsistent PDF spacing using **layout-based PDF extraction**
+* Supports **custom input directories via CLI**
 
 ---
 
-## Output Format
+# Output Format
 
 The clipboard contains **tab-separated rows** in the format:
 
@@ -47,13 +48,91 @@ After running the script, simply **paste into Excel or Google Sheets**.
 
 ---
 
-## Project Structure
+# Requirements
+
+Python version required:
 
 ```
-delivery-ticket-parser/
+Python 3.14.x
+```
+
+The script enforces this at runtime.
+
+Dependencies:
+
+```
+pypdf
+pyperclip
+```
+
+Install using:
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+# Environment Setup
+
+Create a virtual environment before running the script.
+
+```bash
+python3.14 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+Dependencies listed in:
+
+```
+requirements.txt
+```
+
+---
+
+# Usage
+
+### Default directory
+
+Place delivery ticket PDFs inside:
+
+```
+Delivery Documents/
+```
+
+Run:
+
+```bash
+python main.py
+```
+
+---
+
+### Custom directory
+
+You can provide a directory containing PDFs:
+
+```bash
+python main.py "test files"
+```
+
+or
+
+```bash
+python main.py ~/Downloads/tickets
+```
+
+---
+
+# Project Structure
+
+```
+gas-delivery-parser/
 │
 ├── main.py
 ├── lookups.py
+├── requirements.txt
 ├── README.md
 │
 └── Delivery Documents/
@@ -61,60 +140,22 @@ delivery-ticket-parser/
     ├── Order_XXXX.pdf
 ```
 
-### `main.py`
+---
 
-Main parser and extraction script.
+# Lookup Tables
 
-### `lookups.py`
-
-Contains lookup dictionaries:
+The file `lookups.py` contains dictionaries used during parsing:
 
 * `account_to_group`
 * `part_number_to_gas`
 
-These map internal account numbers and cylinder part numbers to readable values.
+These convert internal identifiers into readable values. 
 
 ---
 
-## Requirements
+# Data Model
 
-Python 3.10+
-
-Install dependencies:
-
-```bash
-pip install pypdf pyperclip
-```
-
----
-
-## Usage
-
-1. Place delivery ticket PDFs in:
-
-```
-Delivery Documents/
-```
-
-2. Run the script:
-
-```bash
-python main.py
-```
-
-3. The script will:
-
-* Parse all PDFs
-* Copy the output table to your clipboard
-* Print the list of processed files
-
-4. Paste directly into **Excel or Google Sheets**.
-
----
-
-## Data Model
-
-Two dataclasses represent the parsed data.
+Two dataclasses represent the parsed ticket structure.
 
 ### Cylinder
 
@@ -139,13 +180,13 @@ DeliveryTicket
 
 ---
 
-## Parsing Logic
+# Parsing Logic
 
-The script:
+The script performs the following steps:
 
 1. Extracts text from each PDF page using **layout-based extraction**
 2. Normalizes whitespace
-3. Uses regex to locate:
+3. Uses regex patterns to extract key fields:
 
 | Field           | Pattern                           |
 | --------------- | --------------------------------- |
@@ -154,7 +195,7 @@ The script:
 | Customer PO     | YYYY + A/C/U + 5 digits           |
 | Delivery Date   | `MM/DD/YY HH:MM`                  |
 
-4. Detects cylinder items using the pattern:
+4. Detects cylinder items using:
 
 ```
 PART_NUMBER CO DESCRIPTION
@@ -164,7 +205,7 @@ PART_NUMBER CO DESCRIPTION
 
 ---
 
-## Example Workflow
+# Example Workflow
 
 ```
 Linde Delivery Ticket PDF
@@ -185,14 +226,16 @@ Paste into Spreadsheet
 
 ---
 
-## Notes
+# Notes
 
 * Only **SHIPPED cylinders** are extracted.
 * Returned cylinders are ignored.
 * If a part number is missing from `part_number_to_gas`, the gas field will be blank.
+* Files are processed in **sorted order** for consistent output.
 
 ---
 
-## Author
+# Author
 
 William Veith
+
